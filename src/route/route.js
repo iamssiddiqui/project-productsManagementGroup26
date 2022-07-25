@@ -12,4 +12,6 @@ router.get("/user/:userId/profile", middleware.middleware)
 
 router.put("/user/:userId/profile", userController.updateData)
 
+router.post("/login", userController.loginUser)
+
 module.exports = router

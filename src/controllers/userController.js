@@ -33,8 +33,7 @@ const createUser = async function (req, res) {
 
         let emailRegex = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
 
-        let passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/
-            ;
+        let passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/;
 
         let phoneRegex = /^[6-9][0-9]{9}$/;
 
@@ -140,6 +139,47 @@ const createUser = async function (req, res) {
 
     catch (error) {
         res.status(500).send({ status: false, msg: error.message });
+    }
+}
+
+/////////////////////////login//////////////////////////
+
+const loginUser = async function (req, res) {
+     try {
+          const data = req.body;
+
+        if(!isValidBody(data)){
+        return res.status(400).send({ status: false, msg: "Please provide login credentials!"})
+        }
+
+        let {email, password} = data
+
+        if (!isValid(email)) {
+          return res.status(400).send({ status: false, msg: "Please provide email!"})
+        }
+
+        if (!isValid(password)) {
+          return res.status(400).send({ status: false, msg: "Please provide password!"})
+        }
+
+        const checkCredentials = await userModel.findOne({email: data.email, password: data.password});
+
+        if (!checkCredentials){
+           return res.status(400).send({ status: false, msg: "Invalid login data!"})
+        }
+
+        let token = jwt.sign(
+            {
+                userId: checkCredentials._id,
+                exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+            }, "group26Project")
+
+        return res.status(200).send({ status: true, message: "Success", data: { userId: checkCredentials._id, token: token },});
+  }
+
+  catch (error) {
+        console.log(err.message);
+        return res.status(500).send({ status: false, message: "Error", error: error.message });
     }
 }
 
@@ -310,7 +350,6 @@ const updateData = async function (req, res) {
 
     }
 
-
     catch (error) {
         res.status(500).send({ status: false, msg: error.message });
     }
@@ -320,3 +359,4 @@ const updateData = async function (req, res) {
 module.exports.createUser = createUser
 module.exports.getUserData = getUserData
 module.exports.updateData = updateData
+module.exports.loginUser = loginUser
