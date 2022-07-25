@@ -1,6 +1,6 @@
 const userModel = require("../models/userModel")
 const jwt = require("jsonwebtoken")
-const bcrypt = require("bcryptjs")
+//const bcrypt = require("bcryptjs")
 
 const isValid = function (value) {
   if (typeof value === "undefined" || value === null) return false;
@@ -33,6 +33,8 @@ const createUser = async function (req, res) {
       let passwordRegex = /((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&*()]).{8,15})/;
 
       let phoneRegex = /^[6-9][0-9]{9}$/;
+
+      let pincodeRegex = /^\d{6}$/;
 
       if (!isValid(fname)) {
         return res.status(400).send({status: false, message: "Please enter first name!"})
@@ -86,9 +88,52 @@ const createUser = async function (req, res) {
         return res.status(400).send({status: false, message: "Please enter address!"})
       }
 
+      let fullAddress = JSON.parse(address)
+
+      if (isValid(fullAddress.shipping))  {
+        return res.status(400).send({status: false, message: "Please enter shipping address!"})
+      }
+
+      if (isValid(fullAddress.shipping.city))  {
+        return res.status(400).send({status: false, message: "Please enter city in shiping address!"})
+      }
+
+      if (isValid(fullAddress.shipping.street))  {
+        return res.status(400).send({status: false, message: "Please enter street in shiping address!"})
+      }
+
+      if (isValid(fullAddress.shipping.pincode))  {
+        return res.status(400).send({status: false, message: "Please enter pincode in shiping address!"})
+      }
+
+       if (!fullAddress.shipping.pincode.match(pincodeRegex)) 
+      return res.status(400).send({status: false, message: "Invalid pin code!"})
+
+      if (isValid(fullAddress.billing))  {
+        return res.status(400).send({status: false, message: "Please enter billing address!"})
+      }
+
+      if (isValid(fullAddress.billing.city))  {
+        return res.status(400).send({status: false, message: "Please enter city in billing address!"})
+      }
+
+      if (isValid(fullAddress.billing.street))  {
+        return res.status(400).send({status: false, message: "Please enter street in billing address!"})
+      }
+
+      if (isValid(fullAddress.billing.pincode))  {
+        return res.status(400).send({status: false, message: "Please enter pincode in billing address!"})
+      }
+
+      if (!fullAddress.billing.pincode.match(pincodeRegex)) 
+      return res.status(400).send({status: false, message: "Invalid pin code!"})
 
 
       let saveData = await userModel.create(data)
+
+      
+
+
 
       return res.status(201).send({status: true, msg: "User Creation Successful!", data: saveData})
 
