@@ -10,5 +10,6 @@ router.post("/register", userController.createUser)
 
 router.get("/user/:userId/profile", middleware.middleware)
 
+router.put("/user/:userId/profile", userController.updateData)
 
 module.exports = router
