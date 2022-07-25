@@ -36,3 +36,20 @@ const createUser = async function (req, res) {
     res.status(500).send({ status: false, msg: error.message });
   }
 }
+
+const userModel = require('../models/userModel')
+
+const getUserData = async function(req,res){
+    const id = req.params.userId
+    
+    const getDetails = await userModel.findById({_id:id})
+
+    if(!getDetails){
+        return res.status(400).send({status:false,message:"No user found with given id"})
+    }
+
+    return res.status(200).send({status:true,message:"User profile details",data:getDetails})
+
+}
+module.exports.createUser = createUser
+module.exports.getUserData = getUserData
