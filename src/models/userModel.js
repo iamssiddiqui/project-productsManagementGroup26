@@ -19,11 +19,6 @@ const userModel = new mongoose.Schema({
         unique: true,
         trim: true
     },
-
-    profileImage: {
-        type: String, 
-        unique: true
-},
   
     phone: {
         type: String, 
@@ -35,7 +30,6 @@ const userModel = new mongoose.Schema({
    password: {
         type: String, 
         required: true,
-        unique: true,
         trim: true
    },
 

@@ -16,6 +16,8 @@ const isValidObjectId = function (ObjectId) {
   return mongoose.Types.ObjectId.isValid(ObjectId);
 };
 
+////////////////////////////createUser///////////////////////////////////
+
 const createUser = async function (req, res) {
 
     try {
@@ -30,7 +32,8 @@ const createUser = async function (req, res) {
 
       let emailRegex = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
 
-      let passwordRegex = /((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&*()]).{8,15})/;
+      let passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/
+;
 
       let phoneRegex = /^[6-9][0-9]{9}$/;
 
@@ -88,52 +91,47 @@ const createUser = async function (req, res) {
         return res.status(400).send({status: false, message: "Please enter address!"})
       }
 
-      let fullAddress = JSON.parse(address)
 
-      if (isValid(fullAddress.shipping))  {
+      if (!isValid(address.shipping))  {
         return res.status(400).send({status: false, message: "Please enter shipping address!"})
       }
 
-      if (isValid(fullAddress.shipping.city))  {
+      if (!isValid(address.shipping.city))  {
         return res.status(400).send({status: false, message: "Please enter city in shiping address!"})
       }
 
-      if (isValid(fullAddress.shipping.street))  {
+      if (!isValid(address.shipping.street))  {
         return res.status(400).send({status: false, message: "Please enter street in shiping address!"})
       }
 
-      if (isValid(fullAddress.shipping.pincode))  {
+      if (!isValid(address.shipping.pincode))  {
         return res.status(400).send({status: false, message: "Please enter pincode in shiping address!"})
       }
 
-       if (!fullAddress.shipping.pincode.match(pincodeRegex)) 
-      return res.status(400).send({status: false, message: "Invalid pin code!"})
+      //  if (!address.shipping.pincode.match(pincodeRegex)) 
+      // return res.status(400).send({status: false, message: "Invalid pin code!"})
 
-      if (isValid(fullAddress.billing))  {
+      if (!isValid(address.billing))  {
         return res.status(400).send({status: false, message: "Please enter billing address!"})
       }
 
-      if (isValid(fullAddress.billing.city))  {
+      if (!isValid(address.billing.city))  {
         return res.status(400).send({status: false, message: "Please enter city in billing address!"})
       }
 
-      if (isValid(fullAddress.billing.street))  {
+      if (!isValid(address.billing.street))  {
         return res.status(400).send({status: false, message: "Please enter street in billing address!"})
       }
 
-      if (isValid(fullAddress.billing.pincode))  {
+      if (!isValid(address.billing.pincode))  {
         return res.status(400).send({status: false, message: "Please enter pincode in billing address!"})
       }
 
-      if (!fullAddress.billing.pincode.match(pincodeRegex)) 
-      return res.status(400).send({status: false, message: "Invalid pin code!"})
+      // if (!address.billing.pincode.match(pincodeRegex)) 
+      // return res.status(400).send({status: false, message: "Invalid pin code!"})
 
 
       let saveData = await userModel.create(data)
-
-      
-
-
 
       return res.status(201).send({status: true, msg: "User Creation Successful!", data: saveData})
 
@@ -144,17 +142,29 @@ const createUser = async function (req, res) {
   }
 }
 
+
+///////////////////////getUser//////////////////////////
+
 const getUserData = async function(req,res){
     const id = req.params.userId
+
+    if (!isValidObjectId(id)){
+      return res.status(400).send({status:false,message:"Enter valid userid!"})
+    }
+
+    let userToken = req.userId
     
+    if (userToken !== id) {
+      return res.status(404).send({status:false,message:"No user found!"})
+    }
+
     const getDetails = await userModel.findById({_id:id})
 
     if(!getDetails){
-        return res.status(400).send({status:false,message:"No user found with given id"})
+        return res.status(404).send({status:false,message:"No user found with given id"})
     }
 
     return res.status(200).send({status:true,message:"User profile details",data:getDetails})
-
 }
 module.exports.createUser = createUser
 module.exports.getUserData = getUserData
