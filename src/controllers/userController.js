@@ -185,7 +185,8 @@ const createUser = async function (req, res) {
             fname:fname,
             lname:lname,
             email:email,
-            password:(await bcrypt.hash(password,10)).toString(),
+            profileImage:req.body.profileImage,
+            password:(await bcrypt.hash(password,18)).toString(),
             address:address,
             phone:phone
         }
