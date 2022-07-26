@@ -1,5 +1,9 @@
 const userModel = require("../models/userModel")
 const jwt = require("jsonwebtoken");
+
+const bcrypt = require('bcrypt')
+//const aws = require('aws-sdk')
+
 const { default: mongoose } = require("mongoose");
 //const bcrypt = require("bcryptjs")
 
@@ -27,7 +31,7 @@ const createUser = async function (req, res) {
         if (!isValidBody(data))
             return res.status(400).send({ status: false, message: "Please enter user datails!" });
 
-        let { fname, lname, email, password, phone, address } = data
+        let { fname, lname, email, password, phone} = data
 
         let nameRegex = /^[a-zA-Z ]{2,30}$/;
 
@@ -84,8 +88,11 @@ const createUser = async function (req, res) {
         const phoneInUse = await userModel.findOne({ phone: phone })
 
         if (phoneInUse)
-            return res.status(400).send({ status: false, message: "This phone number is already in use!" })
+           return res.status(400).send({ status: false, message: "This phone number is already in use!" })
 
+        //   console.log(typeof data.address)
+          let address = JSON.parse(req.body.address)
+         //  console.log(typeof address,address.shipping.pincode)
 
         if (!isValid(address)) {
             return res.status(400).send({ status: false, message: "Please enter address!" })
@@ -125,13 +132,22 @@ const createUser = async function (req, res) {
 
         if (!isValid(address.billing.pincode)) {
             return res.status(400).send({ status: false, message: "Please enter pincode in billing address!" })
-        }
+       }
 
         // if (!address.billing.pincode.match(pincodeRegex)) 
         // return res.status(400).send({status: false, message: "Invalid pin code!"})
 
+       // console.log(data,typeof address)
+        const obj = {
+            fname:fname,
+            lname:lname,
+            email:email,
+            password:(await bcrypt.hash(password,10)).toString(),
+            address:address,
+            phone:phone
+        }
 
-        let saveData = await userModel.create(data)
+        let saveData = await userModel.create(obj)
 
         return res.status(201).send({ status: true, msg: "User Creation Successful!", data: saveData })
 
