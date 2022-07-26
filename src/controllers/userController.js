@@ -76,7 +76,7 @@ const createUser = async function (req, res) {
 
         let phoneRegex = /^[6-9][0-9]{9}$/;
 
-        let pincodeRegex = /^\d{6}$/;
+        let pincodeRegex = /^[1-9][0-9]{5}$/;
 
         if (!isValid(fname)) {
             return res.status(400).send({ status: false, message: "Please enter first name!" })
@@ -297,10 +297,10 @@ const updateData = async function (req, res) {
         }
         let data = req.body
 
-        if (!isValidBody(data))
-            return res.status(400).send({ status: false, message: "Please enter user datails!" });
+         if (!isValidBody(data))
+             return res.status(400).send({ status: false, message: "Please enter user datails!" });
 
-        let { fname, lname, email, password, phone, address } = data
+        let { fname, lname, email,profileImage, password, phone, address } = data
 
         let nameRegex = /^[a-zA-Z ]{2,30}$/;
 
@@ -311,7 +311,7 @@ const updateData = async function (req, res) {
 
         let phoneRegex = /^[6-9][0-9]{9}$/;
 
-        let pincodeRegex = /^[1-9]{1}[0-9]{2}\\s{0, 1}[0-9]{3}$/;
+        let pincodeRegex = /^[1-9][0-9]{5}$/;
 
         if (fname) {
             if (!isValid(fname)) {
@@ -344,6 +344,17 @@ const updateData = async function (req, res) {
                 return res.status(400).send({ status: false, message: "email already in use!" })
         }
 
+        if(profileImage){
+            let files = req.files
+            if (files && files.length > 0) {
+                //upload to s3 and get the uploaded link
+                // res.send the link back to frontend/postman
+                let uploadedFileURL = await uploadFile(files[0])
+                req.body.profileImage = uploadedFileURL
+            }
+
+        }
+
         if (password) 
         {
             if (!isValid(password)) {
@@ -372,7 +383,7 @@ const updateData = async function (req, res) {
 
         if (address) {
             
-             //  address = JSON.parse(req.body.address)
+               address = JSON.parse(req.body.address)
 
                  if (!isValid(address)) {
             return res.status(400).send({ status: false, message: "Please enter address!" })
@@ -422,7 +433,7 @@ const updateData = async function (req, res) {
             fname: fname,
             lname: lname,
             email: email,
-         //   profileImage: req.body.profileImage,
+         // profileImage: req.body.profileImage,
          password:password,
             address: address,
             phone: phone
