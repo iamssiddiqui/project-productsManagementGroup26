@@ -1,11 +1,9 @@
 const userModel = require("../models/userModel")
 const jwt = require("jsonwebtoken");
-
 const bcrypt = require('bcrypt')
 const aws = require('aws-sdk')
 
 const { default: mongoose } = require("mongoose");
-//const bcrypt = require("bcryptjs")
 
 const isValid = function (value) {
     if (typeof value === "undefined" || value === null) return false;
@@ -258,7 +256,7 @@ const getUserData = async function (req, res) {
             return res.status(400).send({ status: false, message: "Enter valid userid!" })
         }
 
-        let userToken = req.userId
+        let userToken = req.params.userId
 
         if (userToken !== id) {
             return res.status(404).send({ status: false, message: "No user found!" })
@@ -300,14 +298,13 @@ const updateData = async function (req, res) {
          if (!isValidBody(data))
              return res.status(400).send({ status: false, message: "Please enter user datails!" });
 
-        let { fname, lname, email,profileImage, password, phone, address } = data
+        let { fname, lname, email, profileImage, password, phone, address } = data
 
         let nameRegex = /^[a-zA-Z ]{2,30}$/;
 
         let emailRegex = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
 
-        let passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/
-            ;
+        let passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/;
 
         let phoneRegex = /^[6-9][0-9]{9}$/;
 
@@ -321,6 +318,7 @@ const updateData = async function (req, res) {
             if (!fname.match(nameRegex))
                 return res.status(400).send({ status: false, message: "First name must contain alphabets only!" })
         }
+        
         if (lname) {
             if (!isValid(lname)) {
                 return res.status(400).send({ status: false, message: "Please enter last name!" })
@@ -364,7 +362,6 @@ const updateData = async function (req, res) {
             if (!password.match(passwordRegex))
                 return res.status(400).send({ status: false, message: "Invalid password format! Password must be between 8 and 15 characters, and must contain one uppercase, one lowercase, special characters and number!" })
                 password = (await bcrypt.hash(password, 10)).toString()
-
         }
 
         if (phone) {
@@ -441,8 +438,7 @@ const updateData = async function (req, res) {
 
         const updateDetails = await userModel.findOneAndUpdate({ _id: id }, obj, { new: true })
 
-        return res.status(200).send({ status: false, message: "Success", data: updateDetails })
-
+        return res.status(200).send({ status: false, message: "User details updated!", data: updateDetails })
     }
 
     catch (error) {
