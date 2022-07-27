@@ -189,11 +189,20 @@ const loginUser = async function (req, res) {
             return res.status(400).send({ status: false, msg: "Please provide password!" })
         }
 
-        const checkCredentials = await userModel.findOne({ email: data.email, password: data.password });
+        const hashedPassword = await userModel.findOne({email:email})
+        console.log(hashedPassword)
+
+        const validPassword = await bcrypt.compare(password, hashedPassword.password)
+       // console.log(validPassword)
+        if(validPassword)
+       { 
+        const checkCredentials = await userModel.findOne({ email: data.email, password: hashedPassword.password });
+        console.log(checkCredentials)
 
         if (!checkCredentials) {
             return res.status(400).send({ status: false, msg: "Invalid login data!" })
         }
+    
 
         let token = jwt.sign(
             {
@@ -203,12 +212,15 @@ const loginUser = async function (req, res) {
 
         return res.status(200).send({ status: true, message: "Success", data: { userId: checkCredentials._id, token: token }, });
     }
+}
 
     catch (error) {
-        console.log(err.message);
+        console.log(error.message);
         return res.status(500).send({ status: false, message: "Error", error: error.message });
     }
 }
+
+
 
 
 ///////////////////////getUser//////////////////////////
