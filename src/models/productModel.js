@@ -36,7 +36,7 @@ const productModel = new mongoose.Schema (
     },
 
     isFreeShipping: {
-        type: boolean, 
+        type: Boolean, 
         default: false
     },
 
@@ -50,7 +50,8 @@ const productModel = new mongoose.Schema (
         trim: true
     },
 
-    availableSizes: {type: String, 
+    availableSizes: {
+        type: [String], 
         required: true,
         minLength: 1,
         trim: true,

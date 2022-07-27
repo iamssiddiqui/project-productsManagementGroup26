@@ -28,7 +28,6 @@ const createUser = async function (req, res) {
 
     try {
         let data = req.body
-        let file = req.file
 
         if (!isValidBody(data))
             return res.status(400).send({ status: false, message: "Please enter user datails!" });
@@ -85,8 +84,6 @@ const createUser = async function (req, res) {
 
         if (!password.match(passwordRegex))
             return res.status(400).send({ status: false, message: "Invalid password format! Password must be between 8 and 15 characters, and must contain one uppercase, one lowercase, special characters and number!" })
-
-
 
         if (!isValid(phone)) {
             return res.status(400).send({ status: false, message: "Please enter phone number!" })
@@ -253,9 +250,6 @@ const getUserData = async function (req, res) {
         res.status(500).send({ status: false, msg: error.message });
     }
 }
-
-
-
 
 /////////////////////Update Details ////////////////////////
 
