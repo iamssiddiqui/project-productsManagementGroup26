@@ -18,4 +18,8 @@ router.post("/login", userController.loginUser)
 
 router.post("/products", productContoller.createProduct )
 
+router.get("/products", productContoller.getProductByQuery)
+
+router.get("/products/:productId", productContoller.getProductsByPath)
+
 module.exports = router

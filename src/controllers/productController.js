@@ -1,5 +1,5 @@
 const productModel = require('../models/productmodel')
-const ObjectId = require("mongoose").Types.ObjectId
+const mongoose = require("mongoose")
 
 const { uploadFile } = require("./aws")
 
@@ -101,8 +101,9 @@ const createProduct = async function (req, res) {
         }
 
         let availableSize = ['S','XS','M','X','L','XXL','XL']
-        let getSize = availableSize.split(",").map(x => x.trim())
-        //console.log(getSize)
+       // console.log(availableSize.split(","))
+        let getSize = availableSize.map(x => x.trim())
+        
 
         for (let i = 0; i < getSize.length; i++) {
 
@@ -147,13 +148,15 @@ const createProduct = async function (req, res) {
 const getProductByQuery = async function(req,res) {
  
     try{
+        let filter = {}
+        if(req.query)
+
+       { 
+        
         let data = req.query
  
-        if (!isValidBody(data))
-        return res.status(400).send({ status: false, message: "Please enter query for filteration!" });
- 
-        let filter = {}
- 
+        // if (!isValidBody(data))
+        // return res.status(400).send({ status: false, message: "Please enter query for filteration!" });
         let {name, size, priceSort, priceGreaterThan, priceLessThan} = data
  
         if(name)
@@ -163,6 +166,7 @@ const getProductByQuery = async function(req,res) {
             }
  
             filter['title'] = name
+          //  console.log(filter)
         }
  
         if(size){
@@ -199,11 +203,12 @@ const getProductByQuery = async function(req,res) {
  
         if(priceSort)
         {
-            if(!(priceSort != 1 || priceSort != -1)){
-                return res.status(400).send({status : false, message : "priceSort must have 1 or -1 as input" })
-            }
- 
-            let filterProduct = await product.find(filter,{isDeleted:false}).sort({price: priceSort})
+            if((priceSort == 1 || priceSort == -1))
+ {
+            let filterProduct = await productModel.find({filter,isDeleted:false}).sort({price: priceSort})
+           // console.log(filterProduct)
+        
+
    
             if(!filterProduct)
             {
@@ -212,21 +217,38 @@ const getProductByQuery = async function(req,res) {
  
             return res.status(200).send({status : false, message : "Success", data : filterProduct})
         }
+
+        return res.status(400).send({status:false,message:"priceSort must have 1 or -1 as input"})
+    }
+    }
+
+        console.log(filter)
+
+       if(Object.keys(filter).length>0)
+       { let filterProduct = await productModel.find({ $and: [filter, { isDeleted: false }] })
+
+       // console.log(filterProduct.length)
+        if(filterProduct.length<=0){
+            return res.status(404).send({status:false,message:"No products found with given query"})
+        }
+
+        return res.status(200).send({status : false, message : "Success", data : filterProduct})
+ }
  
- 
-        else
-        {
-            let findProduct = await product.find({isDeleted:false})
+    
+            let findProduct = await productModel.find({isDeleted:false})
+            console.log(findProduct)
        
             if(findProduct){
+                console.log(findProduct)
                 return res.status(200).send({status : false, message : "Success", data : findProduct})
             }
             else{
                 return res.status(404).send({status : false, message : "No products found with this query"})
             }
-        }
+        
  
-    }
+ }
     catch (error) {
         return res.status(500).send({ status: false, message: error.message })      
     }
@@ -249,7 +271,7 @@ const getProductsByPath = async function (req, res) {
             return res.status(404).send({ status: false, message: "Product not found !" })
         }
  
-        return res.status(200).send({ status: true, message: "Success", data: getProducts })
+        return res.status(200).send({ status: true, message: "Success", data: getProduct })
     }
  
     catch (error) {
