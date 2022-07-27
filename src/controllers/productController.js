@@ -142,5 +142,148 @@ const createProduct = async function (req, res) {
     }
 }
 
-
+//////////////////////////////////  Get products using query params  /////////////////////////////////////////////
+ 
+const getProductByQuery = async function(req,res) {
+ 
+    try{
+        let data = req.query
+ 
+        if (!isValidBody(data))
+        return res.status(400).send({ status: false, message: "Please enter query for filteration!" });
+ 
+        let filter = {}
+ 
+        let {name, size, priceSort, priceGreaterThan, priceLessThan} = data
+ 
+        if(name)
+        {
+            if(!isValid(name)){
+                return res.status(400).send({status : false, message : "Enter product name"})
+            }
+ 
+            filter['title'] = name
+        }
+ 
+        if(size){
+            if(!isValid(size)){
+                return res.status(400).send({status : false, message : "Enter size"})
+            }
+   
+            filter['availableSizes'] = size.toUpperCase()
+        }
+       
+        if(priceGreaterThan){
+            if(!isValid(priceGreaterThan)){
+                return res.status(400).send({status : false, messsage : "Enter value for priceGreaterThan field"})
+            }
+ 
+            filter['price'] = {
+                '$gt' : priceGreaterThan
+            }
+        }
+ 
+        if(priceLessThan){
+            if(!isValid(priceLessThan)){
+                return res.status(400).send({status : false, messsage : "Enter value for priceLessThan"})
+            }
+ 
+            filter['price'] = {
+                '$lt' : priceLessThan
+            }
+        }
+ 
+        if(priceLessThan && priceGreaterThan){
+            filter['price'] = { '$lt' : priceLessThan, '$gt' : priceGreaterThan}
+        }
+ 
+        if(priceSort)
+        {
+            if(!(priceSort != 1 || priceSort != -1)){
+                return res.status(400).send({status : false, message : "priceSort must have 1 or -1 as input" })
+            }
+ 
+            let filterProduct = await product.find(filter,{isDeleted:false}).sort({price: priceSort})
+   
+            if(!filterProduct)
+            {
+                return res.status(404).send({status : false, message : "No products found with this query"})
+            }
+ 
+            return res.status(200).send({status : false, message : "Success", data : filterProduct})
+        }
+ 
+ 
+        else
+        {
+            let findProduct = await product.find({isDeleted:false})
+       
+            if(findProduct){
+                return res.status(200).send({status : false, message : "Success", data : findProduct})
+            }
+            else{
+                return res.status(404).send({status : false, message : "No products found with this query"})
+            }
+        }
+ 
+    }
+    catch (error) {
+        return res.status(500).send({ status: false, message: error.message })      
+    }
+}
+ 
+ 
+//////////////////////////////////  Get products using path params  /////////////////////////////////////////////
+ 
+const getProductsByPath = async function (req, res) {
+    try {
+        let id = req.params.productId
+ 
+        if (!isValidObjectId(id)) {
+            return res.status(400).send({ status: false, message: "Invalid productId" })
+        }
+ 
+        let getProduct = await productModel.findById({ _id: id ,isDeleted:false})
+ 
+        if (!getProduct) {
+            return res.status(404).send({ status: false, message: "Product not found !" })
+        }
+ 
+        return res.status(200).send({ status: true, message: "Success", data: getProducts })
+    }
+ 
+    catch (error) {
+        res.status(500).send({ status: false, msg: error.message });
+    }
+}
+ 
+/////////////////////////////////// Delete products using path params /////////////////////////////////////////
+ 
+   const deleteProduct = async function(req,res){
+    try{
+        let id = req.params.productId
+ 
+        if(!isValidObjectId){
+            return res.status(400).send({status:false,message:"Invalid productId"})
+        }
+ 
+        const deleteData = await productModel.findOneAndUpdate({_id:id,isDeleted:false},{isDeleted: true, deletedAt: new Date()}, {new:true})
+ 
+        if(!deleteData){
+            return res.status(404).send({status:false,message:"No product found with given id !!"})
+        }
+ 
+        return res.status(200).send({status:true,message:"Success",data:deleteData})
+    }
+ 
+    catch (error) {
+        res.status(500).send({ status: false, msg: error.message });
+    }
+   }
 module.exports.createProduct = createProduct
+module.exports.getProductByQuery = getProductByQuery
+module.exports.getProductsByPath = getProductsByPath
+module.exports.deleteProduct = deleteProduct
+
+
+
