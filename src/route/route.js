@@ -22,6 +22,8 @@ router.get("/products", productContoller.getProductByQuery)
 
 router.get("/products/:productId", productContoller.getProductsByPath)
 
-//router.put("/products/:productId", productContoller.updateData)
+router.put("/products/:productId", productContoller.updateProduct)
+
+router.delete("/products/:productId", productContoller.deleteProduct)
 
 module.exports = router
