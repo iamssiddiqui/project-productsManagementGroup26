@@ -266,7 +266,6 @@ const updateData = async function (req, res) {
             return res.status(404).send({ status: false, message: "No user found with given id" })
         }
         let data = req.body
-        let file = req.file
 
          if (!isValidBody(data))
              return res.status(400).send({ status: false, message: "Please enter user datails!" });
@@ -318,8 +317,6 @@ const updateData = async function (req, res) {
         if(profileImage){
             let file = req.file
             if (file && file.length > 0) {
-                //upload to s3 and get the uploaded link
-                // res.send the link back to frontend/postman
                 let uploadedFileURL = await uploadFile(file[0])
                 req.body.profileImage = uploadedFileURL
             }
@@ -402,8 +399,7 @@ const updateData = async function (req, res) {
             fname: fname,
             lname: lname,
             email: email,
-         // profileImage: req.body.profileImage,
-         password:password,
+            password: password,
             address: address,
             phone: phone
         }
