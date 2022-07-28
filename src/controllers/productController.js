@@ -100,25 +100,13 @@ const createProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please enter atleast 1 Size!" })
         }
 
-        let availableSize = ['S','XS','M','X','L','XXL','XL']
-       // console.log(availableSize.split(","))
-        let getSize = availableSize.map(x => x.trim())
-        
-
-        for (let i = 0; i < getSize.length; i++) {
-
-            if (!(["S", "XS", "M", "X", "L", "XXL", "XL"].includes(getSize[i]))) 
-            {
-                console.log(getSize[i])
-                return res.status(400).send({ status: false, message: "Size should be among ['S','XS','M','X','L','XXL','XL'] only!" })
-            }
-
-            if (getSize.indexOf(getSize[i]) != i) {
-                return res.status(400).send({ status: false, message: "Size not present!" })
-            }
-        }
-
-        data['availableSize'] = [...getSize]
+        let sizeArr = ["S", "XS", "M", "X", "L", "XXL", "XL"];
+            for (let i = 0; i < availableSizes.length; i++) {
+                if (!sizeArr.includes(availableSizes[i])) {
+                return res.status(400).send({status: false,message: "availableSizes should be-[S, XS,M,X, L,XXL, XL]",
+            });
+    }
+  }
 
         if (!isValid(installments)) {
             return res.status(400).send({ status: false, message: "Please enter installments!" })
@@ -285,7 +273,7 @@ const getProductsByPath = async function (req, res) {
     try{
         let id = req.params.productId
  
-        if(!isValidObjectId){
+        if(!isValidObjectId(id)){
             return res.status(400).send({status:false,message:"Invalid productId"})
         }
  
