@@ -148,5 +148,90 @@ const createCart = async function (req, res) {
     }
 }
 
+////////////////////////////////////////////////////  Update Cart  //////////////////////////////////////////////////////////////////
 
+const updateCart = async function (req,res){
+    let id = req.params.userId
+ 
+    if(!isValidObjectId(id)){
+        return res.status(400).send({status:false, message:"Invalid UserID !"})
+    }
+   
+    let data = req.body
+ 
+    if(!isValidBody(data))
+    {
+        return res.status(400).send({ status: false, message: "Please enter user details!" });
+ 
+    }
+ 
+    let {cartId,productId,removeProduct} = data
+ 
+    if(!isValid(cartId)){
+        return res.status(400).send({status:false,message:"Enter CartId"})
+    }
+ 
+    if((!isValidObjectId(cartId))){
+        return res.status(400).send({status:false,message:"Invalid CartId"})
+    }
+ 
+    const getCart = await cartModel.findById({_id:cartId})
+    if(!getCart){
+        return res.status(400).send({status:false,message:"No cart exist with this id !!"})
+    }
+ 
+    if(!isValid(productId)){
+        return res.status(400).send({status:false,message:"Enter productId"})
+    }
+ 
+    if((!isValidObjectId(productId))){
+        return res.status(400).send({status:false,message:"Invalid productId"})
+    }
+ 
+    const getProduct = await productModel.findById({_id:productId,isDeleted:false})
+    if(!getProduct){
+        return res.status(400).send({status:false,message:"No product exist with this id !!"})
+    }
+ 
+    if(!isValid(removeProduct)){
+        return res.status(400).send({status:false,message:"Enter removeProduct"})
+    }
+ 
+    //filtering products that we want to remove or decrease their quantity
+    let products = getCart.items.filter(x => x.productId.toString() == productId)
+ 
+    //finding their index in cart's item array
+    let indexOfProduct = getCart.items.indexOf(products[0])
+   
+    if(removeProduct==0){
+ 
+        getCart.totalPrice = getCart.totalPrice - (getProduct.price * getCart.items[indexOfProduct].quantity)
+ 
+        //removing the product
+        getCart.items.splice(indexOfProduct,1)
+ 
+        getCart.totalItems = getCart.items.length
+ 
+        return res.status.send({status:false,message:"Success",data:getCart})
+    }
+ 
+    if(removeProduct==1){
+ 
+        getCart.items.quantity = getCart.items[indexOfProduct].quantity - 1
+ 
+        getCart.totalPrice = getCart.totalPrice - getProduct.price
+ 
+        getCart.totalItems = getCart.items.length
+       
+        return res.status.send({status:false,message:"Success",data:getCart})
+ 
+    }
+ 
+    if(removeProduct != 0 || removeProduct != 1){
+        return res.status(400).send({status:false,message:"Remove products can't have any value other than 0 or -1"})
+    }
+ 
+}
+ 
 module.exports.createCart = createCart
+module.exports.updateCart = updateCart
