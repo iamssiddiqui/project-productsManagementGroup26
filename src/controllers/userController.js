@@ -6,6 +6,7 @@ const aws = require('aws-sdk')
 const { uploadFile } = require('./aws')
 
 const { default: mongoose } = require("mongoose");
+//const { RolesAnywhere } = require("aws-sdk");
 
 const isValid = function (value) {
     if (typeof value === "undefined" || value === null) return false;
@@ -21,7 +22,7 @@ const isValidObjectId = function (ObjectId) {
     return mongoose.Types.ObjectId.isValid(ObjectId);
 };
 
-////////////////////////////createUser///////////////////////////////////
+/////////////////////////////////////////////////// Create User /////////////////////////////////////////////////////////////
 
 
 const createUser = async function (req, res) {
@@ -32,18 +33,25 @@ const createUser = async function (req, res) {
         if (!isValidBody(data))
             return res.status(400).send({ status: false, message: "Please enter user datails!" });
 
+        //Destructuring data    
         let { fname, lname, email, password, phone } = data
 
+
+        //List of regex used for validations
         let nameRegex = /^[a-zA-Z ]{2,30}$/;
 
         let emailRegex = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
 
         let passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/;
 
+        let imageUrlRegex = /(https?:\/\/.*\.)(jpg|jpeg|png)/
+
         let phoneRegex = /^[6-9][0-9]{9}$/;
 
         let pincodeRegex = /^[1-9][0-9]{5}$/;
 
+
+        //Validating first name
         if (!isValid(fname)) {
             return res.status(400).send({ status: false, message: "Please enter first name!" })
         }
@@ -51,6 +59,7 @@ const createUser = async function (req, res) {
         if (!fname.match(nameRegex))
             return res.status(400).send({ status: false, message: "First name must contain alphabets only!" })
 
+        //Validating last name
         if (!isValid(lname)) {
             return res.status(400).send({ status: false, message: "Please enter last name!" })
         }
@@ -58,6 +67,7 @@ const createUser = async function (req, res) {
         if (!lname.match(nameRegex))
             return res.status(400).send({ status: false, message: "Last name must contain alphabets only!" })
 
+        //Validating email
         if (!isValid(email)) {
             return res.status(400).send({ status: false, message: "Please enter email!" })
         }
@@ -70,14 +80,24 @@ const createUser = async function (req, res) {
         if (emailInUse)
             return res.status(400).send({ status: false, message: "email already in use!" })
 
-        let files = req.files
-        if (files && files.length > 0) {
-            //upload to s3 and get the uploaded link
-            // res.send the link back to frontend/postman
-            let uploadedFileURL = await uploadFile(files[0])
-            req.body.profileImage = uploadedFileURL
+        //Checking if profileImage is present
+        let profileImage = req.files
+        if (profileImage.length <= 0) {
+            return res.status(400).send({ status: false, message: "Enter profile Image" })
         }
 
+        //Generating s3 link for image
+        if (profileImage && profileImage.length > 0) {
+            let uploadedFileURL = await uploadFile(profileImage[0])
+
+            if (!imageUrlRegex.test(uploadedFileURL)) {
+                return res.status(400).send({ status: false, message: "Invalid document entered as profile image" })
+            }
+
+            data.profileImage = uploadedFileURL
+        }
+
+        //Validating password
         if (!isValid(password)) {
             return res.status(400).send({ status: false, message: "Please enter password!" })
         }
@@ -85,26 +105,27 @@ const createUser = async function (req, res) {
         if (!password.match(passwordRegex))
             return res.status(400).send({ status: false, message: "Invalid password format! Password must be between 8 and 15 characters, and must contain one uppercase, one lowercase, special characters and number!" })
 
+
+        //Validating phone
         if (!isValid(phone)) {
             return res.status(400).send({ status: false, message: "Please enter phone number!" })
         }
 
         if (!phone.match(phoneRegex))
             return res.status(400).send({ status: false, message: "Invalid phone number format!" })
+        data.password = (await bcrypt.hash(password, 10)).toString()
 
         const phoneInUse = await userModel.findOne({ phone: phone })
 
         if (phoneInUse)
             return res.status(400).send({ status: false, message: "This phone number is already in use!" })
 
-        //   console.log(typeof data.address)
-        let address = JSON.parse(req.body.address)
-        //  console.log(typeof address,address.shipping.pincode)
-
-        if (!isValid(address)) {
+        //Validating address
+        if (!isValid(req.body.address)) {
             return res.status(400).send({ status: false, message: "Please enter address!" })
         }
 
+        let address = JSON.parse(req.body.address)
 
         if (!isValid(address.shipping)) {
             return res.status(400).send({ status: false, message: "Please enter shipping address!" })
@@ -144,29 +165,21 @@ const createUser = async function (req, res) {
         if (!address.billing.pincode.toString().match(pincodeRegex))
             return res.status(400).send({ status: false, message: "Invalid pin code!" })
 
-      //  console.log(data, typeof address)
-        const obj = {
-            fname: fname,
-            lname: lname,
-            email: email,
-            profileImage: req.body.profileImage,
-            password: (await bcrypt.hash(password, 10)).toString(),
-            address: address,
-            phone: phone
-        }
+        data.address = address
 
-        let saveData = await userModel.create(obj)
+        //Creating User
+        let saveData = await userModel.create(data)
 
-        return res.status(201).send({ status: true, msg: "User Creation Successful!", data: saveData })
+        return res.status(201).send({ status: true, message: "User Creation Successful!", data: saveData })
 
     }
 
     catch (error) {
-        res.status(500).send({ status: false, msg: error.message });
+        res.status(500).send({ status: false, message: error.message });
     }
 }
 
-/////////////////////////login//////////////////////////
+//////////////////////////////////////////////////////////////   login   /////////////////////////////////////////////////////////////
 
 const loginUser = async function (req, res) {
     try {
@@ -178,6 +191,8 @@ const loginUser = async function (req, res) {
 
         let { email, password } = data
 
+
+        //checking for empty email or password
         if (!isValid(email)) {
             return res.status(400).send({ status: false, msg: "Please provide email!" })
         }
@@ -186,30 +201,35 @@ const loginUser = async function (req, res) {
             return res.status(400).send({ status: false, msg: "Please provide password!" })
         }
 
-        const hashedPassword = await userModel.findOne({email:email})
-        console.log(hashedPassword)
 
-        const validPassword = await bcrypt.compare(password, hashedPassword.password)
-       // console.log(validPassword)
-        if(validPassword)
-       { 
-        const checkCredentials = await userModel.findOne({ email: data.email, password: hashedPassword.password });
-        console.log(checkCredentials)
-
-        if (!checkCredentials) {
-            return res.status(400).send({ status: false, msg: "Invalid login data!" })
+        //Checking if any User is regisetered with given email
+        const user = await userModel.findOne({ email: email })
+        if (!user) {
+            return res.status(400).send({ status: false, message: "User not found with this email " })
         }
-    
 
-        let token = jwt.sign(
-            {
-                userId: checkCredentials._id,
-                exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
-            }, "group26Project")
+        hashedPassword = user.password
 
-        return res.status(200).send({ status: true, message: "Success", data: { userId: checkCredentials._id, token: token }, });
+        //Checking if the entered password matches with user's password
+        const validPassword = await bcrypt.compare(password, hashedPassword)
+
+        if (validPassword) {
+            const checkCredentials = await userModel.findOne({ email: data.email, password: hashedPassword });
+
+            //Generating Token on Successful login
+            let token = jwt.sign(
+                {
+                    userId: checkCredentials._id,
+                    exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+                }, "group26Project")
+
+            return res.status(200).send({ status: true, message: "User login success", data: { userId: checkCredentials._id, token: token }, });
+        }
+
+        else {
+            return res.status(400).send({ status: false, message: "Password isn't correct" })
+        }
     }
-}
 
     catch (error) {
         console.log(error.message);
@@ -220,7 +240,7 @@ const loginUser = async function (req, res) {
 
 
 
-///////////////////////getUser//////////////////////////
+//////////////////////////////////////////////////  getUser  /////////////////////////////////////////////////////////
 
 const getUserData = async function (req, res) {
 
@@ -231,11 +251,11 @@ const getUserData = async function (req, res) {
             return res.status(400).send({ status: false, message: "Enter valid userid!" })
         }
 
-        let userToken = req.params.userId
+        // let userToken = req.params.userId
 
-        if (userToken !== id) {
-            return res.status(404).send({ status: false, message: "No user found!" })
-        }
+        // if (userToken !== id) {
+        //     return res.status(404).send({ status: false, message: "No user found!" })
+        // }
 
         const getDetails = await userModel.findById({ _id: id })
 
@@ -251,30 +271,36 @@ const getUserData = async function (req, res) {
     }
 }
 
-/////////////////////Update Details ////////////////////////
+
+///////////////////////////////////////////  Update Details  ////////////////////////////////////////////
 
 
 const updateData = async function (req, res) {
     try {
         const id = req.params.userId
-        if (!mongoose.isValidObjectId(id)) {
+
+        if (!isValidObjectId(id)) {
             return res.status(400).send({ status: false, message: "Enter valid userId" })
         }
 
         const getUser = await userModel.findById({ _id: id })
+
         if (!getUser) {
             return res.status(404).send({ status: false, message: "No user found with given id" })
         }
+
         let data = req.body
 
-         if (!isValidBody(data))
-             return res.status(400).send({ status: false, message: "Please enter user datails!" });
+        if (!isValidBody(data))
+            return res.status(400).send({ status: false, message: "Please enter user details!" });
 
-        let { fname, lname, email, profileImage, password, phone, address } = data
+        let { fname, lname, email, password, phone, address } = data
 
         let nameRegex = /^[a-zA-Z ]{2,30}$/;
 
         let emailRegex = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
+
+        let imageUrlRegex = /(https?:\/\/.*\.)(jpg|jpeg|png)/
 
         let passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/;
 
@@ -282,25 +308,32 @@ const updateData = async function (req, res) {
 
         let pincodeRegex = /^[1-9][0-9]{5}$/;
 
-        if (fname) {
+        let obj = {}
+
+        if (fname || fname == "") {
+
             if (!isValid(fname)) {
                 return res.status(400).send({ status: false, message: "Please enter first name!" })
             }
 
             if (!fname.match(nameRegex))
                 return res.status(400).send({ status: false, message: "First name must contain alphabets only!" })
+
+                obj['fname'] = fname
         }
-        
-        if (lname) {
+
+        if (lname || lname == "") {
             if (!isValid(lname)) {
                 return res.status(400).send({ status: false, message: "Please enter last name!" })
             }
 
             if (!lname.match(nameRegex))
                 return res.status(400).send({ status: false, message: "Last name must contain alphabets only!" })
+
+                obj['lname'] = lname
         }
 
-        if (email) {
+        if (email || email == "") {
             if (!isValid(email)) {
                 return res.status(400).send({ status: false, message: "Please enter email!" })
             }
@@ -312,28 +345,32 @@ const updateData = async function (req, res) {
 
             if (emailInUse)
                 return res.status(400).send({ status: false, message: "email already in use!" })
+
+                obj['email'] = email
         }
 
-        if(profileImage){
-            let file = req.file
-            if (file && file.length > 0) {
-                let uploadedFileURL = await uploadFile(file[0])
-                req.body.profileImage = uploadedFileURL
+        if (req.files.length > 0) {
+            let profileImage = req.files
+            let uploadedFileURL = await uploadFile(profileImage[0])
+
+            if (!imageUrlRegex.test(uploadedFileURL)) {
+                return res.status(400).send({ status: false, message: "Invalid document entered as profile image !!" })
             }
+
+            obj ['profileImage'] = uploadedFileURL
         }
 
-        if (password) 
-        {
+        if (password || password == "") {
             if (!isValid(password)) {
                 return res.status(400).send({ status: false, message: "Please enter password!" })
             }
 
             if (!password.match(passwordRegex))
                 return res.status(400).send({ status: false, message: "Invalid password format! Password must be between 8 and 15 characters, and must contain one uppercase, one lowercase, special characters and number!" })
-                password = (await bcrypt.hash(password, 10)).toString()
+            obj['password'] = (await bcrypt.hash(password, 10)).toString()
         }
 
-        if (phone) {
+        if (phone || phone == "") {
             if (!isValid(phone)) {
                 return res.status(400).send({ status: false, message: "Please enter phone number!" })
             }
@@ -345,15 +382,17 @@ const updateData = async function (req, res) {
 
             if (phoneInUse)
                 return res.status(400).send({ status: false, message: "This phone number is already in use!" })
+
+                obj['phone'] = phone
         }
 
-        if (address) {
-            
-               address = JSON.parse(req.body.address)
+        if (address || address == "") {
 
-                 if (!isValid(address)) {
-            return res.status(400).send({ status: false, message: "Please enter address!" })
-        }
+            if (!isValid(address)) {
+                return res.status(400).send({ status: false, message: "Please enter address!" })
+            }
+
+            address = JSON.parse(req.body.address)
 
             if (!isValid(address.shipping)) {
                 return res.status(400).send({ status: false, message: "Please enter shipping address!" })
@@ -371,8 +410,8 @@ const updateData = async function (req, res) {
                 return res.status(400).send({ status: false, message: "Please enter pincode in shiping address!" })
             }
 
-              if (!address.shipping.pincode.toString().match(pincodeRegex)) 
-             return res.status(400).send({status: false, message: "Invalid pin code!"})
+            if (!address.shipping.pincode.toString().match(pincodeRegex))
+                return res.status(400).send({ status: false, message: "Invalid pin code!" })
 
             if (!isValid(address.billing)) {
                 return res.status(400).send({ status: false, message: "Please enter billing address!" })
@@ -390,23 +429,15 @@ const updateData = async function (req, res) {
                 return res.status(400).send({ status: false, message: "Please enter pincode in billing address!" })
             }
 
-         if (!address.billing.pincode.toString().match(pincodeRegex)) 
-         return res.status(400).send({status: false, message: "Invalid pin code!"})
-
-        }
-
-        const obj = {
-            fname: fname,
-            lname: lname,
-            email: email,
-            password: password,
-            address: address,
-            phone: phone
+            if (!address.billing.pincode.toString().match(pincodeRegex))
+                return res.status(400).send({ status: false, message: "Invalid pin code!" })
+                   
+                obj['address'] = address
         }
 
         const updateDetails = await userModel.findOneAndUpdate({ _id: id }, obj, { new: true })
 
-        return res.status(200).send({ status: false, message: "User details updated!", data: updateDetails })
+        return res.status(200).send({ status: false, message: "User profile updated!", data: updateDetails })
     }
 
     catch (error) {

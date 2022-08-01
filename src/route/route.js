@@ -10,7 +10,7 @@ router.post("/register", userController.createUser)
 
 router.get("/user/:userId/profile", middleware.middleware, userController.getUserData)
 
-router.put("/user/:userId/profile", middleware.middleware, userController.updateData)
+router.put("/user/:userId/profile", middleware.middleware,middleware.authorization, userController.updateData)
 
 router.post("/login", userController.loginUser)
 

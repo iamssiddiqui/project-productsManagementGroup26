@@ -1,4 +1,5 @@
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const { isValidObjectId } = require("mongoose");
 
 const middleware = async function (req, res, next) {
     try {
@@ -24,4 +25,19 @@ const middleware = async function (req, res, next) {
   }
 }
 
+const authorization = async function (req,res,next){
+  let userLoggedIn = req.decodeToken
+  let user = req.params.userId
+
+  if(!isValidObjectId(user)){
+    return res.status(400).send({status:false,message:"Enter valid userId"})
+  }
+ 
+  if(userLoggedIn.userId != user){
+    return res.status(400).send({status:false,message:"Currently loggedIn user isn't authorized to perform this action"})
+  }
+  next()
+}
+
 module.exports.middleware = middleware
+module.exports.authorization = authorization

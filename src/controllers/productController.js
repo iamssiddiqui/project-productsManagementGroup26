@@ -113,9 +113,9 @@ const createProduct = async function (req, res) {
                 return res.status(400).send({ status: false, message: "Size should be among ['S','XS','M','X','L','XXL','XL'] only!" })
             }
 
-            if (availableSizes.indexOf(availableSizes[i]) != i) {
-                return res.status(400).send({ status: false, message: "Size not present!" })
-            }
+            // if (availableSizes.indexOf(availableSizes[i]) != i) {
+            //     return res.status(400).send({ status: false, message: "Size not present!" })
+            // }
         }
         data.availableSizes = availableSizes
 
@@ -123,9 +123,9 @@ const createProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please enter installments!" })
         }
 
-        if (!validPresentInstallment) {
-            return res.status(400).send({ status: false, message: "Installment required!" })
-        }
+        // if (!validPresentInstallment) {
+        //     return res.status(400).send({ status: false, message: "Installment required!" })
+        // }
 
         if (!isValidInstallment) {
             return res.status(400).send({ status: false, message: "Installment must be a number!" })
@@ -371,7 +371,7 @@ const updateProduct = async function (req, res) {
 
             for (let i = 0; i < availableSize.length; i++) {
                 if (!(["S", "XS", "M", "X", "L", "XXL", "XL"].includes(availableSize[i]))) {
-                    console.log(availableSize[i])
+                  //  console.log(availableSize[i])
                     return res.status(400).send({ status: false, message: "Size should be among ['S','XS','M','X','L','XXL','XL'] only!" })
                 }
 
