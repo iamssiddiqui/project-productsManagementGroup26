@@ -1,4 +1,4 @@
-const productModel = require('../models/productmodel')
+const productModel = require('../models/productModel')
 const mongoose = require("mongoose")
 
 const { uploadFile } = require("./aws")
