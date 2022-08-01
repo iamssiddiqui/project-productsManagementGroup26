@@ -20,12 +20,17 @@ const isValidObjectId = function (ObjectId) {
 const validPresentInstallment = function (value) {
     if (value <= 0) return false
     if (value % 1 == 0) return true;
+    //if (typeof value === "number" && value % 1 === 0) return true
 }
 
 const isValidInstallment = function (value) {
-    if (value < 0) return false
+    if (value < 0) return false;
+    if (value == 1) return false;
     if (value % 1 == 0) return true;
+    
 }
+
+let wordRegex = /^[a-zA-Z\s]*$/;
 
 ////////////////////////////////////// createProduct /////////////////////////////////////////////////
 
@@ -33,6 +38,7 @@ const createProduct = async function (req, res) {
     try {
         let data = req.body
 
+        
 
         if (!isValidBody(data))
             return res.status(400).send({ status: false, message: "Please enter user datails!" });
@@ -45,26 +51,28 @@ const createProduct = async function (req, res) {
 
         let titleInUse = await productModel.findOne({ title })
         if (titleInUse) {
-            return res.status(400).send({ status: false, message: "Title already in use! Please provide unique title." })
+            return res.status(400).send({ status: false, message:`${title} is already in use.Enter another title` })
         }
 
-        // if(!isNaN(title)){
-        //     return res.status(400).send({status:false,message:"Title can't be number"})
-        // }
+        if (!title.match(wordRegex))
+            return res.status(400).send({ status: false, message: "Title must contain alphabets only!" })
 
         if (!isValid(description)) {
             return res.status(400).send({ status: false, message: "Please enter description!" })
         }
 
+        if (!description.match(wordRegex))
+            return res.status(400).send({ status: false, message: "Description must contain alphabets only!" })
+
         if (!isValid(price)) {
             return res.status(400).send({ status: false, message: "Please enter price!" })
         }
 
-        if (isNaN(price) || price < 0) {
-            return res.status(400).send({ status: false, message: "Price should be a positive number!" })
-        }
-
-        data.price = Number(price).toFixed(2)
+        if (price == 0){
+                return res.status(400).send({ status: false, message: "Price of product can't be zero" })}
+    
+        if (!price.match(/^\d{0,8}(\.\d{1,2})?$/)){
+            return res.status(400).send({ status: false, message: "Price  you have set is not valid" })}
 
         if (!isValid(currencyId)) {
             return res.status(400).send({ status: false, message: "Please enter currencyId!" })
@@ -86,7 +94,10 @@ const createProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please enter isFreeShipping!" })
         }
 
-
+        if((isFreeShipping) != 'true' && isFreeShipping != 'false' ){
+             return res.status(400).send({status:false, message: "isFreeShipping must be a boolean type"})
+        }
+            
         let files = req.files
         if (files && files.length > 0) {
             let uploadedFileURL = await uploadFile(files[0])
@@ -101,10 +112,7 @@ const createProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please enter atleast 1 Size!" })
         }
 
-        //   console.log(availableSizes)
         let availableSizes = req.body.availableSizes.split(",").map(x => x.trim())
-        //console.log(getSize)
-        //console.log(availableSizes, data.availableSizes)
 
         for (let i = 0; i < availableSizes.length; i++) {
 
@@ -113,23 +121,25 @@ const createProduct = async function (req, res) {
                 return res.status(400).send({ status: false, message: "Size should be among ['S','XS','M','X','L','XXL','XL'] only!" })
             }
 
-            // if (availableSizes.indexOf(availableSizes[i]) != i) {
-            //     return res.status(400).send({ status: false, message: "Size not present!" })
-            // }
+            if (availableSizes.indexOf(availableSizes[i]) != i) {
+                return res.status(400).send({ status: false, message: "Size not present!" })
+            }
         }
         data.availableSizes = availableSizes
 
         if (!isValid(installments)) {
-            return res.status(400).send({ status: false, message: "Please enter installments!" })
+            return res.status(400).send({ status: false, message: "Please enter installment!" })
+        }          
+
+        if (!isValidInstallment(installments)) {
+            return res.status(400).send({ status: false, message: "Installment must be a natural number!" })
         }
 
-        // if (!validPresentInstallment) {
-        //     return res.status(400).send({ status: false, message: "Installment required!" })
-        // }
-
-        if (!isValidInstallment) {
-            return res.status(400).send({ status: false, message: "Installment must be a number!" })
+        if (!validPresentInstallment(installments)) {
+            return res.status(400).send({ status: false, message: "Installment must be present!" })
         }
+
+        
 
         let saveData = await productModel.create(data)
 
@@ -272,7 +282,7 @@ const getProductsByPath = async function (req, res) {
     }
 }
 
-//////////////////////////////////////// Update products //////////////////////////////////////////////////////
+//////////////////////////////////////// Update products ////////////////////////////////////////
 
 const updateProduct = async function (req, res) {
     try {
@@ -296,29 +306,41 @@ const updateProduct = async function (req, res) {
 
         if (title) {
             if (!isValid(title)) {
-                return res.status(400).send({ status: false, message: "Please enter title!" })
+                return res.status(400).send({ status: false, message:`${title} is already in use. Enter another title`})
             }
 
             let titleInUse = await productModel.findOne({ title })
             if (titleInUse) {
                 return res.status(400).send({ status: false, message: "Title already in use! Please provide unique title." })
             }
+
+            if (!title.match(wordRegex))
+            return res.status(400).send({ status: false, message: "Title must contain alphabets only!" })
         }
+
         if (description) {
             if (!isValid(description)) {
                 return res.status(400).send({ status: false, message: "Please enter description!" })
             }
+
+            if (!description.match(wordRegex))
+            return res.status(400).send({ status: false, message: "Description must contain alphabets only!" })
         }
 
         if (price) {
             if (!isValid(price)) {
                 return res.status(400).send({ status: false, message: "Please enter price!" })
             }
+            if (price == 0){
+                return res.status(400).send({ status: false, message: "Price of product can't be zero" })}
+    
+            if (!price.match(/^\d{0,8}(\.\d{1,2})?$/)){
+            return res.status(400).send({ status: false, message: "Price  you have set is not valid" })}
+
 
             if (isNaN(price) || price < 0) {
-                return res.status(400).send({ status: false, message: "Price should be a positive number!" })
+            return res.status(400).send({ status: false, message: "Price should be a positive number!" })
             }
-            data.price = Number(price).toFixed(2)
         }
 
         if (currencyId) {
@@ -371,7 +393,7 @@ const updateProduct = async function (req, res) {
 
             for (let i = 0; i < availableSize.length; i++) {
                 if (!(["S", "XS", "M", "X", "L", "XXL", "XL"].includes(availableSize[i]))) {
-                  //  console.log(availableSize[i])
+                    console.log(availableSize[i])
                     return res.status(400).send({ status: false, message: "Size should be among ['S','XS','M','X','L','XXL','XL'] only!" })
                 }
 
@@ -386,14 +408,13 @@ const updateProduct = async function (req, res) {
             if (!isValid(installments)) {
                 return res.status(400).send({ status: false, message: "Please enter installments!" })
             }
+            if (!isValidInstallment(installments)) {
+            return res.status(400).send({ status: false, message: "Installment must be a natural number!" })
+        }
 
-            if (!validPresentInstallment) {
-                return res.status(400).send({ status: false, message: "Installment required!" })
-            }
-
-            if (!isValidInstallment) {
-                return res.status(400).send({ status: false, message: "Installment must be a number!" })
-            }
+        if (!validPresentInstallment(installments)) {
+            return res.status(400).send({ status: false, message: "Installment must be present!" })
+        }
         }
 
         const updatedProduct = await productModel.findOneAndUpdate({ _id: productId, isDeleted: false }, data, { new: true })
@@ -413,13 +434,13 @@ const deleteProduct = async function (req, res) {
         let id = req.params.productId
 
         if (!isValidObjectId(id)) {
-            return res.status(400).send({ status: false, message: "Invalid productId" })
+            return res.status(400).send({ status: false, message: "Please enter valid product Id" })
         }
 
         const deleteData = await productModel.findOneAndUpdate({ _id: id, isDeleted: false }, { isDeleted: true, deletedAt: new Date() }, { new: true })
 
         if (!deleteData) {
-            return res.status(404).send({ status: false, message: "No product found with given id !!" })
+            return res.status(404).send({ status: false, message: "already deleted!" })
         }
 
         return res.status(200).send({ status: true, message: "Success", data: deleteData })
