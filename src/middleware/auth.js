@@ -15,6 +15,7 @@ const middleware = async function (req, res, next) {
       
       else {
         req.decodeToken = decode
+        
         next()
       }
     })
@@ -34,7 +35,7 @@ const authorization = async function (req,res,next){
   }
  
   if(userLoggedIn.userId != user){
-    return res.status(400).send({status:false,message:"Currently loggedIn user isn't authorized to perform this action"})
+    return res.status(400).send({status:false,message:"Currently logged in user is unauthorized to perform this action"})
   }
   next()
 }

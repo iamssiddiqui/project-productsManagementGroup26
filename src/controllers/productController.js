@@ -20,7 +20,6 @@ const isValidObjectId = function (ObjectId) {
 const validPresentInstallment = function (value) {
     if (value <= 0) return false
     if (value % 1 == 0) return true;
-    //if (typeof value === "number" && value % 1 === 0) return true
 }
 
 const isValidInstallment = function (value) {
@@ -162,8 +161,6 @@ const getProductByQuery = async function (req, res) {
 
             let data = req.query
 
-            // if (!isValidBody(data))
-            // return res.status(400).send({ status: false, message: "Please enter query for filteration!" });
             let { name, size, priceSort, priceGreaterThan, priceLessThan } = data
 
             if (name) {
@@ -172,7 +169,6 @@ const getProductByQuery = async function (req, res) {
                 }
 
                 filter['title'] = name
-                //  console.log(filter)
             }
 
             if (size) {
