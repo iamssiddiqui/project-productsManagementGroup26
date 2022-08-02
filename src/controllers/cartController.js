@@ -30,29 +30,29 @@ const createCart = async function (req, res) {
         let data = req.body
         let userId=req.params.userId 
 
-        let {productId, cartId}=data 
+        let {productId}=data 
         let userToken=req.userId
 
         if (!isValidObjectId(userId)){
             return res.status(400).send({ status: false, message: "Invalid userId" })
         }
 
-        const validUser = await userModel.findById(userId);
+    //     const validUser = await cartModel.findById(userId);
 
-        if(!validUser){
-            return res.status(404).send({status:false,message:"User not present"})
-        }
+    //     if(!validUser){
+    //         return res.status(404).send({status:false,message:"User not present"})
+    //     }
 
 
-     //validating empty req body.
-        if (!isValidBody(data)) {
-            return res.status(400).send({ status: false, message: "invalid request parameters. Please provide user details" })
-        }
+    //  //validating empty req body.
+    //     if (!isValidBody(data)) {
+    //         return res.status(400).send({ status: false, message: "invalid request parameters. Please provide user details" })
+    //     }
 
     //find cart is available for user or not
         let findCart = await cartModel.findOne({userId: userId})
         if(findCart){
-
+               cartId = findCart._id
             if(!isValid(cartId)){
                 return res.status(400).send({status:false,message:"Please enter cartId"})
             }
