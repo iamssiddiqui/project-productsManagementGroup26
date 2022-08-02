@@ -205,26 +205,40 @@ const updateCart = async function (req,res){
     let indexOfProduct = getCart.items.indexOf(products[0])
    
     if(removeProduct==0){
- 
-        getCart.totalPrice = getCart.totalPrice - (getProduct.price * getCart.items[indexOfProduct].quantity)
- 
-        //removing the product
+
+        let update = {}
+
+        update ['totalPrice'] = getCart.totalPrice - (getProduct.price * getCart.items[indexOfProduct].quantity)
+
         getCart.items.splice(indexOfProduct,1)
- 
-        getCart.totalItems = getCart.items.length
- 
-        return res.status.send({status:false,message:"Success",data:getCart})
-    }
+
+        update ['items'] = getCart.items
+
+        update ['totalItems'] = getCart.items.length
+    
+        let updateCartData = await cartModel.findOneAndUpdate({_id:cartId},update,{new:true})
+        return res.status(200).send({status:false,message:"Success",data:updateCartData})
+      }
  
     if(removeProduct==1){
+            let update = {}
+              
+            update ['quantity'] = getCart.items[indexOfProduct].quantity - 1
+
+            update ['totalPrice'] = getCart.totalPrice - getProduct.price
+
+            update ['totalItems'] = getCart.items.length
+    //   { 
+    //     quantity : getCart.items[indexOfProduct].quantity - 1,
  
-        getCart.items.quantity = getCart.items[indexOfProduct].quantity - 1
+    //    totalPrice : getCart.totalPrice - getProduct.price,
  
-        getCart.totalPrice = getCart.totalPrice - getProduct.price
- 
-        getCart.totalItems = getCart.items.length
-       
-        return res.status.send({status:false,message:"Success",data:getCart})
+    //     totalItems : getCart.items.length
+        
+    //    }
+
+       let updateCartData = await cartModel.findOneAndUpdate({_id:cartId},update,{new:true})
+        return res.status(200).send({status:false,message:"Success",data:updateCartData})
  
     }
  
@@ -234,7 +248,7 @@ const updateCart = async function (req,res){
  
 }
 
-
+////////////////////////////////////////////////// Get Carrt  //////////////////////////////////////////////////////////////////////
 const getCart = async function(req,res) {
         
     try{
