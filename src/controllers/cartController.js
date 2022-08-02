@@ -233,6 +233,41 @@ const updateCart = async function (req,res){
     }
  
 }
+
+
+const getCart = async function(req,res) {
+        
+    try{
+            let userId=req.params.userId 
+
+        //check productId is Valid ObjectId
+          if (!isValidObjectId(userId)) {
+          return res.status(400).send({ status: false, message: "Invalid userId" })
+        }
+
+        //search userID in User Collection
+        const validUser = await userModel.findById(userId);
+
+        if(!validUser){
+            return res.status(404).send({status:false, message:"User not present"})
+        }
+
+        //search userID in cart Collection
+        let findCart = await cartModel.findOne({userId: userId}).populate("items.productId")
+
+         if(!findCart){
+            return res.status(404).send({status:false, message:"Cart not present with this user id"})
+        }
+
+
+        return res.status(200).send({status:true, message:"Success", data:findCart})
+    }
+    catch(err){
+            return res.status(500).send({status:false, message:err.message})
+            
+        }
+    }
  
 module.exports.createCart = createCart
 module.exports.updateCart = updateCart
+module.exports.getCart = getCart
