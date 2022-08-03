@@ -311,6 +311,35 @@ const getCart = async function (req, res) {
     }
 }
 
+const deleteCart = async function (req, res) {
+    try {
+        const userId = req.params.userId;
+        if (!mongoose.isValidObjectId(userId)) {
+            return res.status(400).send({ status: false, message: "Invalid userId!" });
+        }
+
+        const checkUser = await userModel.findById(userId)
+        if (!checkUser) {
+            return res.status(404).send({ status: false, message: "User with this userId doesn't exist" })
+        }
+
+        const checkCart = await cartModel.findOne({ userId: userId })
+        if (!checkCart) {
+            return res.status(404).send({ status: false, message: "Cart with this userId doesn't exist" })
+        }
+    
+        const deleteCart = await cartModel.findOneAndUpdate({ userId: userId }, { items: [], totalPrice: 0, totalItems: 0 }, { new: true });
+        return res.status(500).send({ status: false, message: "cart is deleted!" })
+        
+    } 
+
+    catch (err) {
+        res.status(500).send({status:false, message:err.message})
+    }
+}
+
+
 module.exports.createCart = createCart
 module.exports.updateCart = updateCart
 module.exports.getCart = getCart
+module.exports.deleteCart = deleteCart
