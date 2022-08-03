@@ -277,12 +277,7 @@ const getUserData = async function (req, res) {
 
 const updateData = async function (req, res) {
     try {
-        const id = req.params.userId
-
-        if (!isValidObjectId(id)) {
-            return res.status(400).send({ status: false, message: "Enter valid userId" })
-        }
-
+      
         const getUser = await userModel.findById({ _id: id })
 
         if (!getUser) {
@@ -333,7 +328,9 @@ const updateData = async function (req, res) {
                 obj['lname'] = lname
         }
 
-        if (email || email == "") {
+        if (email || email == "")
+        
+        {
             if (!isValid(email)) {
                 return res.status(400).send({ status: false, message: "Please enter email!" })
             }
@@ -349,7 +346,9 @@ const updateData = async function (req, res) {
                 obj['email'] = email
         }
 
-        if (req.files.length > 0) {
+        if (req.files.length > 0) 
+        
+        {
             let profileImage = req.files
             let uploadedFileURL = await uploadFile(profileImage[0])
 
@@ -360,7 +359,9 @@ const updateData = async function (req, res) {
             obj ['profileImage'] = uploadedFileURL
         }
 
-        if (password || password == "") {
+        if (password || password == "")
+        
+        {
             if (!isValid(password)) {
                 return res.status(400).send({ status: false, message: "Please enter password!" })
             }
@@ -370,7 +371,9 @@ const updateData = async function (req, res) {
             obj['password'] = (await bcrypt.hash(password, 10)).toString()
         }
 
-        if (phone || phone == "") {
+        if (phone || phone == "")
+        
+        {
             if (!isValid(phone)) {
                 return res.status(400).send({ status: false, message: "Please enter phone number!" })
             }
@@ -381,12 +384,16 @@ const updateData = async function (req, res) {
             const phoneInUse = await userModel.findOne({ phone: phone })
 
             if (phoneInUse)
+
                 return res.status(400).send({ status: false, message: "This phone number is already in use!" })
 
                 obj['phone'] = phone
+                
         }
 
-        if (address || address == "") {
+        if (address || address == "") 
+        
+        {
 
             if (!isValid(address)) {
                 return res.status(400).send({ status: false, message: "Please enter address!" })
@@ -433,6 +440,7 @@ const updateData = async function (req, res) {
                 return res.status(400).send({ status: false, message: "Invalid pin code!" })
                    
                 obj['address'] = address
+                
         }
 
         const updateDetails = await userModel.findOneAndUpdate({ _id: id }, obj, { new: true })

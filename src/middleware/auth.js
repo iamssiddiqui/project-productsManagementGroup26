@@ -26,8 +26,10 @@ const middleware = async function (req, res, next) {
   }
 }
 
-const authorization = async function (req,res,next){
+const authorization = async function (req,res,next)
+{
   let userLoggedIn = req.decodeToken
+  
   let user = req.params.userId
 
   if(!isValidObjectId(user)){
