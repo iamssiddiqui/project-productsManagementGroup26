@@ -156,19 +156,17 @@ const updateOrder = async function (req, res)
         if(!isValidObjectId(orderId)){
             return res.status(400).send({status : false, message : "Invalid orderId"})
         }
- 
-        if(status || status =="")
 
-        {
+        
           if(!isValid(status)){
-           return res.status(400).send({status:false,message:"Status can't be an empty string"})
+           return res.status(400).send({status:false,message:"Enter status to update !"})
           }
 
           if(!(["pending", "completed", "cancelled"].includes(status))){
 
            return res.status(400).send({status:false,message:"Status should be among any of these values -> [pending, completed, cancelled]"})
           }
-       }
+       
  
         let findorder = await orderModel.findById({_id : orderId,isDeleted:false})
  
