@@ -1,6 +1,7 @@
 const userModel = require("../models/userModel")
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt')
+
 const aws = require('aws-sdk')
 
 const { uploadFile } = require('./aws')
@@ -278,10 +279,22 @@ const getUserData = async function (req, res) {
 const updateData = async function (req, res) {
     try {
       
+        let id = req.params.userId
+
+        if(!isValidObjectId(id)){
+            return res.status(400).send({status:false,message:"Enter Valid userID"})
+         }
+
         const getUser = await userModel.findById({ _id: id })
 
         if (!getUser) {
             return res.status(404).send({ status: false, message: "No user found with given id" })
+        }
+
+        let loggedInUser = req.decodeToken.userId
+
+        if(loggedInUser != id){
+            return res.status(403).send({status:false,message:"LoggedInUser isn't authorized to do updation here !!!"})
         }
 
         let data = req.body

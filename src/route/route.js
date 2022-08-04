@@ -4,7 +4,7 @@ const middleware = require("../middleware/auth")
 const userController = require("../controllers/userController")
 const productContoller = require("../controllers/productController")
 const cartController = require("../controllers/cartController")
-
+const orderController = require("../controllers/orderController")
 
 //user route
 
@@ -12,7 +12,7 @@ router.post("/register", userController.createUser)
 
 router.get("/user/:userId/profile", middleware.middleware, userController.getUserData)
 
-router.put("/user/:userId/profile", middleware.middleware,middleware.authorization, userController.updateData)
+router.put("/user/:userId/profile", middleware.middleware, userController.updateData)
 
 router.post("/login", userController.loginUser)
 
@@ -38,5 +38,10 @@ router.get("/users/:userId/cart", cartController.getCart)
 
 router.delete("/users/:userId/cart", cartController.deleteCart)
 
+//Order route
+
+router.post("/users/:userId/orders",middleware.middleware, orderController.createOrder)
+
+router.put("/users/:userId/orders",middleware.middleware, orderController.updateOrder)
 
 module.exports = router

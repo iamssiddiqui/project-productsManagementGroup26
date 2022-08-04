@@ -2,7 +2,6 @@ const cartModel = require("../models/cartModel")
 const userModel = require("../models/userModel")
 const productModel = require("../models/productModel")
 const mongoose = require("mongoose")
-const ObjectId = require("mongoose").Types.ObjectId
 
 const isValid = function (value) {
     if (typeof value === "undefined" || value === null) return false;
@@ -339,8 +338,8 @@ const deleteCart = async function (req, res) {
             return res.status(404).send({ status: false, message: "Cart with this userId doesn't exist" })
         }
 
-        const deleteCart = await cartModel.findOneAndUpdate({ userId: userId }, { items: [], totalPrice: 0, totalItems: 0 }, { new: true });
-        return res.status(500).send({ status: false, message: "cart is deleted!" })
+        await cartModel.findOneAndUpdate({ userId: userId }, { items: [], totalPrice: 0, totalItems: 0 }, { new: true });
+        return res.status(400).send({ status: false, message: "Cart is deleted!" })
 
     }
 
