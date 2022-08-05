@@ -19,7 +19,7 @@ const middleware = async function (req, res, next) {
       }
     })
   }
-
+  
   catch (err) {
     return res.status(500).send({ msg: "Error", error: err.message })
   }

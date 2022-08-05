@@ -19,10 +19,12 @@ const isValidObjectId = function (ObjectId) {
 };
 
 
-//////////////////////////////////////////  Create Order  ////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////  Create Order  /////////////////////////////////////////////////////////////////////
 
-const createOrder = async function (req,res){
-    try{
+const createOrder = async function (req,res)
+{
+    try
+    {
           
          let id = req.params.userId
 
@@ -94,6 +96,13 @@ const createOrder = async function (req,res){
            }
         }
 
+        let totalQuantity = 0
+
+        for(let i = 0 ;i<getCart.items.length;i++){
+            
+                 totalQuantity = totalQuantity + getCart.items[i].quantity
+        }
+
 
            let createData = 
            {
@@ -101,7 +110,7 @@ const createOrder = async function (req,res){
             items:getCart.items,
             totalPrice: getCart.totalPrice,
             totalItems:getCart.totalItems,
-            totalQuantity:getCart.items.length,
+            totalQuantity:totalQuantity,
             status:status,
             cancellable:cancellable
            }
@@ -118,7 +127,7 @@ const createOrder = async function (req,res){
 }
 
 
-///////////////////////////////////////////////////  Update Order  //////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////// Update Order  //////////////////////////////////////////////////////////////////////////////
 
 
 const updateOrder = async function (req, res)
