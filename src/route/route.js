@@ -30,13 +30,13 @@ router.delete("/products/:productId", productContoller.deleteProduct)
 
 //cart route
 
-router.post("/users/:userId/cart", cartController.createCart)
+router.post("/users/:userId/cart", middleware.middleware, cartController.createCart)
 
-router.put("/users/:userId/cart",cartController.updateCart)
+router.put("/users/:userId/cart", middleware.middleware, cartController.updateCart)
 
-router.get("/users/:userId/cart", cartController.getCart)
+router.get("/users/:userId/cart", middleware.middleware, cartController.getCart)
 
-router.delete("/users/:userId/cart", cartController.deleteCart)
+router.delete("/users/:userId/cart", middleware.middleware, cartController.deleteCart)
 
 //Order route
 

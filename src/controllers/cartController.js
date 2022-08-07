@@ -22,6 +22,8 @@ const isValidQuantity = function (value) {
     if (value % 1 == 0) return true;
 }
 
+/////////////////////////////Create Cart///////////////////////////
+
 const createCart = async function (req, res) {
 
     try {
@@ -30,6 +32,12 @@ const createCart = async function (req, res) {
 
         if (!isValidObjectId(userId)) {
             return res.status(400).send({ status: false, message: "Invalid userId" })
+        }
+
+        let loggedInUser = req.decodeToken.userId
+      
+        if(loggedInUser != userId){
+            return res.status(403).send({status:false, message:"Unauthorized access!"})
         }
 
         const validUser = await userModel.findById(userId);
@@ -49,7 +57,6 @@ const createCart = async function (req, res) {
             return res.status(400).send({ status: false, message: "Invalid request parameters. Please provide user details" })
         }
 
-
         if (!isValid(productId)) {
             return res.status(400).send({ status: false, message: "Please enter productId" })
         }
@@ -66,7 +73,6 @@ const createCart = async function (req, res) {
         if (!validProduct) {
             return res.status(404).send({ status: false, message: "Product not present" })
         }
-
 
         //find cart is available for user or not
         let findCart = await cartModel.findOne({ userId: userId })
@@ -146,7 +152,7 @@ const createCart = async function (req, res) {
     }
 }
 
-////////////////////////////////////////////////////  Update Cart  //////////////////////////////////////////////////////////////////
+/////////////////////////  Update Cart  ///////////////////////////////
 
 const updateCart = async function (req, res) {
 
@@ -156,7 +162,16 @@ const updateCart = async function (req, res) {
 
         if (!isValidObjectId(id)) {
             return res.status(400).send({ status: false, message: "Invalid UserID !" })
+
         }
+        
+        let loggedInUser = req.decodeToken.userId
+      
+        if(loggedInUser != id){
+            return res.status(403).send({status:false, message:"Unauthorized access!"})
+        }
+
+
 
         let data = req.body
 
@@ -281,7 +296,7 @@ const updateCart = async function (req, res) {
 }
 
 
-////////////////////////////////////////////////// Get Cart  //////////////////////////////////////////////////////////////////////
+//////////////////////////////// Get Cart  ///////////////////////////////////
 
 const getCart = async function (req, res) {
 
@@ -291,6 +306,12 @@ const getCart = async function (req, res) {
         //check productId is Valid ObjectId
         if (!isValidObjectId(userId)) {
             return res.status(400).send({ status: false, message: "Invalid userId" })
+        }
+
+        let loggedInUser = req.decodeToken.userId
+      
+        if(loggedInUser != userId){
+            return res.status(403).send({status:false, message:"Unauthorized access!"})
         }
 
         //search userID in User Collection
@@ -316,6 +337,8 @@ const getCart = async function (req, res) {
     }
 }
 
+//////////////////Delete Cart//////////////////////////
+
 const deleteCart = async function (req, res) {
     try {
         const userId = req.params.userId;
@@ -323,6 +346,8 @@ const deleteCart = async function (req, res) {
         if (!isValidObjectId(userId)) {
             return res.status(400).send({ status: false, message: "Invalid userId!" });
         }
+
+        
 
         const checkUser = await userModel.findById(userId)
 
@@ -334,6 +359,12 @@ const deleteCart = async function (req, res) {
         
         if (!checkCart) {
             return res.status(404).send({ status: false, message: "Cart with this userId doesn't exist" })
+        }
+
+        let loggedInUser = req.decodeToken.userId
+      
+        if(loggedInUser != userId){
+            return res.status(403).send({status:false, message:"Unauthorized access!"})
         }
 
         await cartModel.findOneAndUpdate({ userId: userId }, { items: [], totalPrice: 0, totalItems: 0 }, { new: true });

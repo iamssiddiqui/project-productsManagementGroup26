@@ -221,7 +221,7 @@ const getProductByQuery = async function (req, res) {
             }
         }
 
-        console.log(filter)
+        //console.log(filter)
 
         if (Object.keys(filter).length > 0) {
             let filterProduct = await productModel.find({ $and: [filter, { isDeleted: false }] })
@@ -236,10 +236,10 @@ const getProductByQuery = async function (req, res) {
 
 
         let findProduct = await productModel.find({ isDeleted: false })
-        console.log(findProduct)
+        //console.log(findProduct)
 
         if (findProduct) {
-            console.log(findProduct)
+            //console.log(findProduct)
             return res.status(200).send({ status: false, message: "Success", data: findProduct })
         }
         else {
@@ -264,10 +264,10 @@ const getProductsByPath = async function (req, res) {
             return res.status(400).send({ status: false, message: "Invalid productId" })
         }
 
-        let getProduct = await productModel.findById({ _id: id, isDeleted: false })
+        let getProduct = await productModel.findOne({ _id: id, isDeleted: false })
 
         if (!getProduct) {
-            return res.status(404).send({ status: false, message: "Product not found !" })
+            return res.status(404).send({ status: false, message: "Product not found!" })
         }
 
         return res.status(200).send({ status: true, message: "Success", data: getProduct })

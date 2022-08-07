@@ -180,7 +180,7 @@ const createUser = async function (req, res) {
     }
 }
 
-//////////////////////////////////////////////////////////////   login   /////////////////////////////////////////////////////////////
+///////////////////////////////////   login   /////////////////////////////////////////////////////////////
 
 const loginUser = async function (req, res) {
     try {
@@ -241,7 +241,7 @@ const loginUser = async function (req, res) {
 
 
 
-//////////////////////////////////////////////////  getUser  /////////////////////////////////////////////////////////
+/////////////////////////////////getUser/////////////////////////////
 
 const getUserData = async function (req, res) {
 
@@ -252,11 +252,11 @@ const getUserData = async function (req, res) {
             return res.status(400).send({ status: false, message: "Enter valid userid!" })
         }
 
-        // let userToken = req.params.userId
-
-        // if (userToken !== id) {
-        //     return res.status(404).send({ status: false, message: "No user found!" })
-        // }
+        let loggedInUser = req.decodeToken.userId
+      
+        if(loggedInUser != id){
+            return res.status(403).send({status:false, message:"Unauthorized access!"})
+        }
 
         const getDetails = await userModel.findById({ _id: id })
 
