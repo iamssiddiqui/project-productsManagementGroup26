@@ -44,4 +44,9 @@ router.post("/users/:userId/orders",middleware.middleware, orderController.creat
 
 router.put("/users/:userId/orders",middleware.middleware, orderController.updateOrder)
 
+//In case of any other request
+router.all('/*', async function(req, res){
+    res.status(404).send({status: false, msg: "Page Not Found!!!"})
+})
+
 module.exports = router

@@ -16,6 +16,7 @@ const userModel = new mongoose.Schema({
    email: {
         type: String, 
         required: true,
+        valid:true,
         unique: true,
         trim: true
     },
@@ -35,6 +36,8 @@ const userModel = new mongoose.Schema({
    password: {
         type: String, 
         required: true,
+        minLen:8,
+        maxLen:15,
         trim: true
    },
 

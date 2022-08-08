@@ -299,9 +299,11 @@ const updateData = async function (req, res) {
 
         let data = req.body
 
+        if(data && !req.files){
         if (!isValidBody(data))
             return res.status(400).send({ status: false, message: "Please enter user details!" });
-
+          }
+          
         let { fname, lname, email, password, phone, address } = data
 
         let nameRegex = /^[a-zA-Z ]{2,30}$/;

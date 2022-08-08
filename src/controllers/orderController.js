@@ -68,7 +68,11 @@ const createOrder = async function (req,res)
            }
 
            if(getCart.userId != id){
-               return res.status(400).send({status:false,message:"LoggedInUser doesn't own this cart"})
+               return res.status(403).send({status:false,message:"LoggedInUser doesn't own this cart"})
+           }
+
+           if(getCart.totalItems==0){
+            return res.status(400).send({status:false,message:"Cart is empty ! Can't place orders !"})
            }
 
         //Status isn't mandatory
@@ -116,7 +120,8 @@ const createOrder = async function (req,res)
            }
 
            const createOrder = await orderModel.create(createData)
-           return res.status(400).send({status:false,message:"Succesful",data:createOrder})
+           await cartModel.findOneAndUpdate({_id:cartId},{items:[],totalPrice:0,totalItems:0})
+           return res.status(201).send({status:false,message:"Succesful",data:createOrder})
     }
 
     
@@ -184,7 +189,7 @@ const updateOrder = async function (req, res)
         }
  
         if(findorder.userId != id){
-            return res.status(401).send({status : false, message : "LoggedInUser doesn't own this order !!"})
+            return res.status(403).send({status : false, message : "LoggedInUser doesn't own this order !!"})
         }
 
         if(findorder.cancellable == false && status=='cancelled'){
