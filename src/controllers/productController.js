@@ -103,6 +103,7 @@ const createProduct = async function (req, res) {
         }
 
         let files = req.files
+        if(files.length == 0){return res.status(400).send({status:false, message: "productImage needed" })}
         if (files && files.length > 0) {
             let uploadedFileURL = await uploadFile(files[0])
             data.productImage = uploadedFileURL
@@ -159,102 +160,79 @@ const createProduct = async function (req, res) {
 //////////////////////////////////  Get products using query params  /////////////////////////////////////////////
 
 const getProductByQuery = async function (req, res) {
-
+      
     try {
-        let filter = {}
-        if (req.query) {
-
-            let data = req.query
-
-            let { name, size, priceSort, priceGreaterThan, priceLessThan } = data
-
-            if (name) {
-                if (!isValid(name)) {
-                    return res.status(400).send({ status: false, message: "Enter product name" })
+          
+        const queryData = req.query
+          
+        let filter = { isDeleted: false }
+        let { size,name,priceGreaterThan,priceLessThan,priceSort} = queryData
+    
+        if(name){   
+            if(!isValid(name)){
+                return res.status(400).send({status: false, message: "Please enter name correctly"})
                 }
 
-                filter['title'] = name
-            }
-
-            if (size) {
-                if (!isValid(size)) {
-                    return res.status(400).send({ status: false, message: "Enter size" })
-                }
-
-                filter['availableSizes'] = size.toUpperCase()
-            }
-
-            if (priceGreaterThan) {
-                if (!isValid(priceGreaterThan)) {
-                    return res.status(400).send({ status: false, messsage: "Enter value for priceGreaterThan field" })
-                }
-
-                filter['price'] = {
-                    '$gt': priceGreaterThan
-                }
-            }
-
-            if (priceLessThan) {
-                if (!isValid(priceLessThan)) {
-                    return res.status(400).send({ status: false, messsage: "Enter value for priceLessThan" })
-                }
-
-                filter['price'] = {
-                    '$lt': priceLessThan
-                }
-            }
-
-            if (priceLessThan && priceGreaterThan) {
-                filter['price'] = { '$lt': priceLessThan, '$gt': priceGreaterThan }
-            }
-
-            if (priceSort) {
-                if ((priceSort == 1 || priceSort == -1)) {
-                    let filterProduct = await productModel.find({ filter, isDeleted: false }).sort({ price: priceSort })
-                    // console.log(filterProduct)
-
-
-
-                    if (!filterProduct) {
-                        return res.status(404).send({ status: false, message: "No products found with this query" })
-                    }
-
-                    return res.status(200).send({ status: false, message: "Success", data: filterProduct })
-                }
-
-                return res.status(400).send({ status: false, message: "priceSort must have 1 or -1 as input" })
-            }
+            filter['title'] = {}
+            filter['title']['$regex'] = name; 
+            filter['title']['$options'] = 'i'
         }
+ 
+  
+        if (size) { let size1 = size.split(",").map(x => x.trim().toUpperCase()) 
+        if (size1.map(x => isValid(x)).filter(x => x === false).length !== 0) 
 
-        //console.log(filter)
-
-        if (Object.keys(filter).length > 0) {
-            let filterProduct = await productModel.find({ $and: [filter, { isDeleted: false }] })
-
-            // console.log(filterProduct.length)
-            if (filterProduct.length <= 0) {
-                return res.status(404).send({ status: false, message: "No products found with given query" })
+        return res.status(400).send({ status: false, message: "Size Should be among S,XS,M,X,L,XXL,XL" }) 
+        filter['availableSizes'] = { $in: size1 } } 
+  
+        if(priceGreaterThan){
+            if(!isValid(priceGreaterThan)){
+                return res.status(400).send({ status: false, message: "Please enter a price greater than" }) 
             }
 
-            return res.status(200).send({ status: false, message: "Success", data: filterProduct })
+            if(!(isNum(priceGreaterThan))){
+                return res.status(400).send({ status: false, message: "Please enter a number in priceGreaterThan" })
+            }
+
+            if(!(filter.hasOwnProperty('price'))){
+                filter['price'] = {}   
+            }
+
+            filter['price']['$gt'] = Number(priceGreaterThan)
+    
         }
+  
+        if(priceLessThan){
+            if(!isValid(priceLessThan)){
+                return res.status(400).send({ status: false, message: "Please enter a valid priceLessThan" }) 
+            }
+            
+            if(!(isNum(priceLessThan))){
+                return res.status(400).send({ status: false, message: "Please enter a number in priceGreaterThan"})
+            }
 
-
-        let findProduct = await productModel.find({ isDeleted: false })
-        //console.log(findProduct)
-
-        if (findProduct) {
-            //console.log(findProduct)
-            return res.status(200).send({ status: false, message: "Success", data: findProduct })
+            if(!(filter.hasOwnProperty('price'))){
+                filter['price'] = {}
+            }
+    
+            filter['price']['$lt'] = Number(priceLessThan);
         }
-        else {
-            return res.status(404).send({ status: false, message: "No products found with this query" })
+  
+        if(priceSort){
+            if(!(priceSort == 1  || priceSort == -1)){
+                return res.status(404).send({ status: false, message: "Price sort can be only 1 or -1" });
+                } 
+            }
+    
+            let Products = await productModel.find(filter).sort({price: priceSort})
+            if (Products.length == 0) {
+                return res.status(404).send({ status: false, message: "No products found" })
+            }  
+        return res.status(200).send({ status: true, message: "Success", data: Products })    
         }
-
-
-    }
+        
     catch (error) {
-        return res.status(500).send({ status: false, message: error.message })
+        res.status(500).send({ status: false, message: error.message })
     }
 }
 
@@ -388,15 +366,13 @@ const updateProduct = async function (req, res) {
             }
         }
 
-        if (req.files.length > 0) {
-            let productImage = req.files
-            let uploadedFileURL = await uploadFile(productImage[0])
-
-            if (!imageUrlRegex.test(uploadedFileURL)) {
-                return res.status(400).send({ status: false, message: "Invalid document entered as product image !!" })
+        if (req.files) {
+            let files = req.files
+            if(files.length == 0){return res.status(400).send({status:false, message: "productImage needed" })}
+            if (files && files.length > 0) {
+                let uploadedFileURL = await uploadFile(files[0])
+                data.productImage = uploadedFileURL
             }
-
-            obj['productImage'] = uploadedFileURL
         }
 
 
