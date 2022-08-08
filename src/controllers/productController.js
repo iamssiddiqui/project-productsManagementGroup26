@@ -422,6 +422,10 @@ const updateProduct = async function (req, res) {
         }
 
         const updatedProduct = await productModel.findOneAndUpdate({ _id: productId, isDeleted: false }, obj, { new: true })
+
+        if(!updatedProduct){
+            return res.status(404).send({status:false,message:"Product not found !"})
+        }
         return res.status(200).send({ status: true, message: "success", data: updatedProduct })
     }
 

@@ -48,26 +48,25 @@ const createCart = async function (req, res) {
 
 
         let data = req.body
-        let { productId } = data
-        let quantity = 1
+    
         //validating empty req body
 
         if (!isValidBody(data)) {
             return res.status(400).send({ status: false, message: "Invalid request parameters. Please provide user details" })
         }
 
-        if (!isValid(productId)) {
+        if (!isValid(data.productId)) {
             return res.status(400).send({ status: false, message: "Please enter productId" })
         }
 
         //check productId is Valid ObjectId
-        if (!isValidObjectId(productId)) {
+        if (!isValidObjectId(data.productId)) {
             return res.status(400).send({ status: false, message: "product id is not valid" })
         }
 
         //check product is available in Product collection which is not deleted
 
-        const validProduct = await productModel.findOne({ _id: productId, isDeleted: false })
+        const validProduct = await productModel.findOne({ _id: data.productId, isDeleted: false })
 
         if (!validProduct) {
             return res.status(404).send({ status: false, message: "Product not present" })
@@ -81,11 +80,19 @@ const createCart = async function (req, res) {
         //if cart is not available for user creat New cart and add product detail from user
 
         if (!findCart) {
+            let quantity;
+
+             if(!data.quantity){
+                quantity = 1
+             }
+             else{
+                quantity = data.quantity
+             }
             cart = {
                 userId: userId,
                 items: [
                     {
-                        productId: productId,
+                        productId: data.productId,
                         quantity: quantity
                     }],
                 totalPrice: quantity * (validProduct.price),
@@ -93,26 +100,32 @@ const createCart = async function (req, res) {
             }
 
             const newCart = await cartModel.create(cart)
-            return res.status(201).send({ status: true, message: "Success", data: newCart })
+            return res.status(201).send({ status: true, message: "Successfully created new Cart !", data: newCart })
         }
 
         //if cart is available for user add product details from user
 
         if (findCart) {
-            if (cartId != findCart._id) {
-                return res.status(400).send({ status: false, message: `This cart is not present for this user ${userId}` })
-            }
+                   let quantity;
+
+             if(!data.quantity){
+                quantity = 1
+             }
+             else{
+                quantity = data.quantity
+             }
+
 
             let price = findCart.totalPrice + (quantity * validProduct.price)
             let itemsArr = findCart.items
 
             for (let i = 0; i < itemsArr.length; i++) {
-                if (itemsArr[i].productId.toString() === productId) {
+                if (itemsArr[i].productId.toString() === data.productId) {
                     itemsArr[i].quantity += quantity
 
                     let itemAddedInCart = { items: itemsArr, totalPrice: price, totalItems: itemsArr.length }
 
-                    let newData = await cartModel.findOneAndUpdate({ _id: findCart._id }, itemAddedInCart, { new: true })
+                    let newData = await cartModel.findOneAndUpdate({ _id: cartId}, itemAddedInCart, { new: true })
 
                     return res.status(201).send({ status: true, message: `Success`, data: newData })
                 }
@@ -132,6 +145,7 @@ const createCart = async function (req, res) {
         return res.status(500).send({ status: false, message: err.message })
     }
 }
+
 
 /////////////////////////  Update Cart  ///////////////////////////////
 
