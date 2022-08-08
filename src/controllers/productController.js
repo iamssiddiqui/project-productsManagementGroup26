@@ -57,6 +57,8 @@ const createProduct = async function (req, res) {
         if (!title.match(wordRegex))
             return res.status(400).send({ status: false, message: "Title must contain alphabets only!" })
 
+                     data.title = title.replace(/\s+/, ' ').trim()
+                     
         if (!isValid(description)) {
             return res.status(400).send({ status: false, message: "Please enter description!" })
         }
