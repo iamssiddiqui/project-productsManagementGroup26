@@ -58,7 +58,7 @@ const createProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Title must contain alphabets only!" })
 
                      data.title = title.replace(/\s+/, ' ').trim()
-                     
+
         if (!isValid(description)) {
             return res.status(400).send({ status: false, message: "Please enter description!" })
         }
@@ -290,10 +290,10 @@ const updateProduct = async function (req, res) {
         let productId = req.params.productId
 
         if (!isValidObjectId(productId)) {
-            return res.status(400).send({ status: false, message: "Enter valid userId" })
+            return res.status(400).send({ status: false, message: "Enter valid productId" })
         }
 
-        const getProduct = await productModel.findById({ _id: productId })
+        const getProduct = await productModel.findById({ _id: productId, isDeleted:false })
         if (!getProduct) {
             return res.status(404).send({ status: false, message: "No product found with given id" })
         }
@@ -306,11 +306,11 @@ const updateProduct = async function (req, res) {
                 return res.status(400).send({ status: false, message: "Please enter user details!" });
         }
 
-        let { title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments } = data
+        let { title, description, price,currencyId,currencyFormat, isFreeShipping, style, availableSizes, installments } = data
 
         if (title || title == '') {
             if (!isValid(title)) {
-                return res.status(400).send({ status: false, message: `${title} is already in use. Enter another title` })
+                return res.status(400).send({ status: false, message: `Enter vaid title !` })
             }
 
             let titleInUse = await productModel.findOne({ title })
@@ -355,8 +355,31 @@ const updateProduct = async function (req, res) {
                   obj['price'] = price
         }
 
-                   obj['currencyId'] = 'INR'
-                   obj['currencyFormat'] = '₹'
+                if (currencyId || currencyId == '') 
+                {
+                    if (!isValid(currencyId)) {
+                        return res.status(400).send({ status: false, message: "Please enter currencyId!" })
+                    }
+        
+                    if (currencyId != "INR") {
+                        return res.status(400).send({ status: false, message: "Currency must be in INR only" })
+                    }
+                          
+                    obj['currencyId'] = 'INR'
+                }
+        
+                if (currencyFormat || currencyFormat == '') {
+                    if (!isValid(currencyFormat)) {
+                        return res.status(400).send({ status: false, message: "Please enter currency format!" })
+                    }
+        
+                    if (currencyFormat != "₹") {
+                        return res.status(400).send({ status: false, message: "Currency must be in ₹ only" })
+                    }
+
+                    obj['currencyFormat'] = '₹'
+                }
+        
 
 
         if (isFreeShipping || isFreeShipping == '') {
@@ -445,7 +468,7 @@ const deleteProduct = async function (req, res) {
         const deleteData = await productModel.findOneAndUpdate({ _id: id, isDeleted: false }, { isDeleted: true, deletedAt: new Date() }, { new: true })
 
         if (!deleteData) {
-            return res.status(404).send({ status: false, message: "already deleted!" })
+            return res.status(404).send({ status: false, message: "Product not found !" })
         }
 
         return res.status(200).send({ status: true, message: "Success", data: deleteData })
